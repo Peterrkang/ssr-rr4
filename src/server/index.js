@@ -1,11 +1,12 @@
 import express from "express";
 import cors from "cors";
-import { renderToString } from "react-dom/server";
-import App from "../shared/App";
-import { fetchPopularRepos } from "../shared/api";
-
 import React from "react";
 import serialize from "serialize-javascript";
+import { renderToString } from "react-dom/server";
+import { matchPath, StaticRouter } from "react-router-dom";
+
+import App from "../shared/App";
+import routes from "../shared/routes";
 
 const app = express();
 
@@ -14,11 +15,23 @@ app.use(cors());
 app.use(express.static("public"));
 
 app.get("*", (req, res, next) => {
-  fetchPopularRepos().then(data => {
-    const markup = renderToString(<App data={data} />);
+  const activeRoute = routes.find(route => matchPath(req.url, route)) || {};
 
-    res.send(
-      `<!DOCTYPE html>
+  const promise = activeRoute.fetchInitialData
+    ? activeRoute.fetchInitialData(req.path)
+    : Promise.resolve();
+
+  promise
+    .then(data => {
+      const context = { data };
+      const markup = renderToString(
+        <StaticRouter location={req.url} context={context}>
+          <App />
+        </StaticRouter>
+      );
+
+      res.send(
+        `<!DOCTYPE html>
         <html>
             <head>
                 <title>SSR with RR</title>
@@ -29,8 +42,9 @@ app.get("*", (req, res, next) => {
                 <div id='app'>${markup}</div>
             </body>
         </html>`
-    );
-  });
+      );
+    })
+    .catch(next);
 });
 
 app.listen(3000, () => {
