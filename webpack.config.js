@@ -1,6 +1,7 @@
 var path = require("path");
 var webpack = require("webpack");
 var nodeExternals = require("webpack-node-externals");
+var shellPlugin = require("webpack-shell-plugin");
 
 var browserConfig = {
   entry: "./src/browser/index.js",
@@ -34,7 +35,8 @@ var serverConfig = {
   plugins: [
     new webpack.DefinePlugin({
       __isBrowser__: "false"
-    })
+    }),
+    new shellPlugin({ onBuildEnd: ["nodemon server.js"] })
   ]
 };
 
