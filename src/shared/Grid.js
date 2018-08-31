@@ -23,10 +23,9 @@ class Grid extends Component {
     }
   }
 
-  componentWillReceiveProps(nextProps) {
-    const { match } = this.props;
-    if (nextProps.match.params.id !== match.params.id) {
-      this.fetchRepos(nextProps.match.params.id);
+  componentDidUpdate(prevProps, prevState) {
+    if (prevProps.match.params.id !== this.props.match.params.id) {
+      this.fetchRepos(this.props.match.params.id);
     }
   }
 
